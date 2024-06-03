@@ -34,13 +34,13 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # create application-database.yaml
-      - name: make application-database.yaml
+      # create application-database.properties
+      - name: make application-database.properties
         run: |
           cd ./src/main/resources
           touch ./application-database.properties
           echo "${{ secrets.DATABASE }}" >> ./application-database.properties
-          shell: bash
+        shell: bash
 
 
       # 2. Spring Boot 애플리케이션 빌드
