@@ -74,14 +74,7 @@ jobs:
             sudo docker stop $(sudo docker ps -q) 2>/dev/null || true
             sudo docker run --name github-actions-demo --rm -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo
             sudo docker system prune -f
-#      # 우분투 연결
-#      - name: set up SSH
-#        uses: appleboy/ssh-action@v0.1.6
-#        with:
-#          host: ${{ secrets.EC2_HOST }}
-#          username: ${{ secrets.EC2_USERNAME }}
-#          key: ${{ secrets.EC2_KEY }}
-#
+
 #      # 최신 이미지를 풀받습니다
 #      - name: docker pull
 #        run: sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo
