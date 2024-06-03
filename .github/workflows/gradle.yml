@@ -62,26 +62,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 우분투 연결
-      - name: set up SSH
+      # EC2 연결 및 Docker 명령 실행
+      - name: Connect to EC2 and run Docker commands
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
+          username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-
-      # 최신 이미지를 풀받습니다
-      - name: docker pull
-        run: sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo
-
-      # 기존의 컨테이너를 중지시킵니다
-      - name: docker stop container
-        run: sudo docker stop $(sudo docker ps -q) 2>/dev/null || true
-
-      # 최신 이미지를 컨테이너화하여 실행시킵니다
-      - name: docker run new container
-        run: sudo docker run --name github-actions-demo --rm -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo
-
-      # 미사용 이미지를 정리합니다
-      - name: delete old docker image
-        run: sudo docker system prune -f
+          script: |
+            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo
+            sudo docker stop $(sudo docker ps -q) 2>/dev/null || true
+            sudo docker run --name github-actions-demo --rm -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo
+            sudo docker system prune -f
+#      # 우분투 연결
+#      - name: set up SSH
+#        uses: appleboy/ssh-action@v0.1.6
+#        with:
+#          host: ${{ secrets.EC2_HOST }}
+#          username: ${{ secrets.EC2_USERNAME }}
+#          key: ${{ secrets.EC2_KEY }}
+#
+#      # 최신 이미지를 풀받습니다
+#      - name: docker pull
+#        run: sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo
+#
+#      # 기존의 컨테이너를 중지시킵니다
+#      - name: docker stop container
+#        run: sudo docker stop $(sudo docker ps -q) 2>/dev/null || true
+#
+#      # 최신 이미지를 컨테이너화하여 실행시킵니다
+#      - name: docker run new container
+#        run: sudo docker run --name github-actions-demo --rm -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo
+#
+#      # 미사용 이미지를 정리합니다
+#      - name: delete old docker image
+#        run: sudo docker system prune -f
