@@ -7,6 +7,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class HelloController {
     @RequestMapping("/")
     public String Hello() {
-        return "배포 테스트 중입니다.";
+        return "http 배포 테스트 중입니다.";
     }
 }
