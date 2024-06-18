@@ -3,14 +3,13 @@ package com.loatodo.loatodobackend.domain.user.entity;
 import com.loatodo.loatodobackend.util.Timestamp;
 import com.loatodo.loatodobackend.util.UserRole;
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
+@Builder
+@AllArgsConstructor
 @Entity
 @Table(name = "users")
 public class User extends Timestamp {
@@ -19,7 +18,7 @@ public class User extends Timestamp {
     @Column(nullable = false)
     private Long id;
 
-    @Column
+    @Column(nullable = false)
     private String username;
 
     @Column
@@ -31,9 +30,6 @@ public class User extends Timestamp {
     @Column
     private String email;
 
-    @Column
-    private String picture;
-
     @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)
     private UserRole role;
@@ -44,17 +40,17 @@ public class User extends Timestamp {
     @Column
     private String providerId;
 
-    @Builder
-    public User(String name, String email, String picture, UserRole role) {
-        this.name = name;
-        this.email = email;
-        this.picture = picture;
-        this.role = role;
-    }
+//    @Builder
+//    public User(String username, String name, String email, String picture, UserRole role) {
+//        this.username = username;
+//        this.name = name;
+//        this.email = email;
+//        this.picture = picture;
+//        this.role = role;
+//    }
 
-    public User update(String name, String picture) {
+    public User update(String name) {
         this.name = name;
-        this.picture = picture;
 
         return this;
     }
