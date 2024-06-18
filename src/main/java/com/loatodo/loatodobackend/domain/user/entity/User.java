@@ -35,9 +35,6 @@ public class User extends Timestamp {
     private UserRole role;
 
     @Column
-    private String picture;
-
-    @Column
     private String provider;
 
     @Column
@@ -52,9 +49,8 @@ public class User extends Timestamp {
 //        this.role = role;
 //    }
 
-    public User update(String name, String picture) {
+    public User update(String name) {
         this.name = name;
-        this.picture = picture;
 
         return this;
     }

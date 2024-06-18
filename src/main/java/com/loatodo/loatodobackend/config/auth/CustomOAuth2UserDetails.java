@@ -1,4 +1,4 @@
-package com.loatodo.loatodobackend.domain.user.dto;
+package com.loatodo.loatodobackend.config.auth;
 
 import com.loatodo.loatodobackend.domain.user.entity.User;
 import org.springframework.security.core.GrantedAuthority;

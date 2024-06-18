@@ -1,8 +1,7 @@
 package com.loatodo.loatodobackend.domain.user.service;
 
-import com.loatodo.loatodobackend.domain.user.dto.CustomOAuth2UserDetails;
-import com.loatodo.loatodobackend.domain.user.dto.GoogleUserDetails;
-import com.loatodo.loatodobackend.domain.user.dto.OAuth2UserInfo;
+import com.loatodo.loatodobackend.config.auth.CustomOAuth2UserDetails;
+import com.loatodo.loatodobackend.config.auth.OAuthAttributes;
 import com.loatodo.loatodobackend.domain.user.entity.User;
 import com.loatodo.loatodobackend.domain.user.repository.UserRepository;
 import com.loatodo.loatodobackend.util.UserRole;
@@ -26,34 +25,33 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(userRequest);
+
         log.info("getAttributes : {}",oAuth2User.getAttributes());
 
-        String provider = userRequest.getClientRegistration().getRegistrationId();
+        String oauthProvider = userRequest.getClientRegistration().getRegistrationId();
 
-        OAuth2UserInfo oAuth2UserInfo = null;
+        //OAuth2 로그인 진행시 키가 되는 필드값 프라이머리키와 같은 값 네이버 카카오 지원 x
+        String usernameAttributeName = userRequest.getClientRegistration().getProviderDetails()
+                .getUserInfoEndpoint().getUserNameAttributeName();
+
+        //OAuth2UserService를 통해 가져온 데이터를 담을 클래스
+        OAuthAttributes attributes = OAuthAttributes.of(oauthProvider, usernameAttributeName, oAuth2User.getAttributes());
 
         // 뒤에 진행할 다른 소셜 서비스 로그인을 위해 구분 => 구글
-        if(provider.equals("google")){
+        if(oauthProvider.equals("google")){
             log.info("구글 로그인");
-            oAuth2UserInfo = new GoogleUserDetails(oAuth2User.getAttributes());
-
         }
 
-        String providerId = oAuth2UserInfo.getProviderId();
-        String email = oAuth2UserInfo.getEmail();
-        String username = provider + "_" + providerId;
-        String name = oAuth2UserInfo.getName();
-
+        String username = oauthProvider + "_" + attributes.getProviderId();
         Optional<User> findUser = userRepository.findByUsername(username);
         User user;
-
         if (!findUser.isPresent()) {
             user = User.builder()
                     .username(username)
-                    .name(name)
-                    .email(email)
-                    .provider(provider)
-                    .providerId(providerId)
+                    .email(attributes.getEmail())
+                    .name(attributes.getName())
+                    .provider(oauthProvider)
+                    .providerId(attributes.getProviderId())
                     .role(UserRole.USER)
                     .build();
             userRepository.save(user);
