@@ -42,6 +42,14 @@ jobs:
           echo "${{ secrets.DATABASE }}" >> ./application-database.properties
         shell: bash
 
+      # create application-oauth.properties
+      - name: make application-oauth.properties
+        run: |
+          cd ./src/main/resources
+          touch ./application-oauth.properties
+          echo "${{ secrets.OAUTH }}" >> ./application-oauth.properties
+        shell: bash
+
 
       # 2. Spring Boot 애플리케이션 빌드
       - name: Build with Gradle
