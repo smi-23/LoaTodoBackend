@@ -11,9 +11,9 @@
     <h2>회원 가입</h2>
     <form th:method="post" th:action="|@{/{loginType}/join (loginType=${loginType})}|" th:object="${joinRequest}">
         <div>
-            <label th:for="loginId">ID : </label>
-            <input type="text" th:field="*{loginId}" th:errorclass="error-input"/>
-            <div class="error-class" th:errors="*{loginId}"></div>
+            <label th:for="username">ID : </label>
+            <input type="text" th:field="*{username}" th:errorclass="error-input"/>
+            <div class="error-class" th:errors="*{username}"></div>
         </div>
         <br/>
         <div>

@@ -20,7 +20,7 @@ public class SignupRequestDto {
     @NotBlank(message = "이름을 입력하세요.")
     private String name;
 
-    @NotBlank(message = "역할을 입력하세요.")
-    private UserRole role;
+//    @NotBlank(message = "역할을 입력하세요.")
+//    private UserRole role;
 
 }
