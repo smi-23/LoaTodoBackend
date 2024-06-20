@@ -1,12 +1,16 @@
 package com.loatodo.loatodobackend.domain.user.service;
 
-import com.loatodo.loatodobackend.domain.user.dto.LoginRequestDto;
 import com.loatodo.loatodobackend.domain.user.dto.SignupRequestDto;
+import com.loatodo.loatodobackend.domain.user.dto.SignupResponseDto;
 import com.loatodo.loatodobackend.domain.user.entity.User;
 import com.loatodo.loatodobackend.domain.user.repository.UserRepository;
+import com.loatodo.loatodobackend.exception.CustomException;
+import com.loatodo.loatodobackend.exception.ErrorCode;
+import com.loatodo.loatodobackend.util.Message;
 import com.loatodo.loatodobackend.util.UserRole;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,75 +23,47 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final BCryptPasswordEncoder pwEncoder;
 
-    public boolean checkLoginIdDuplicate(String username) {
-        return userRepository.existsByUsername(username);
-    }
+    public ResponseEntity<Message> signup(SignupRequestDto requestDto) {
+        String username = requestDto.getUsername();
+        String password = requestDto.getPassword();
+        String passwordCheck = requestDto.getPasswordCheck();
 
-    public void signup(SignupRequestDto signupRequestDto) {
-        User userinfo = User.builder()
-                .username(signupRequestDto.getUsername())
-                .password(signupRequestDto.getPassword())
-                .name(signupRequestDto.getName())
+        // 비밀번호와 비밀번호 확인 값이 일치하는지 확인
+        // 비밀번호가 메모리에 저장되어 있었을텐데 이게 유출될 가능성은?
+        if (!password.equals(passwordCheck)) {
+            throw new CustomException(ErrorCode.PASSWORD_NOT_MATCH);
+        }
+
+        // 비밀번호를 암호화하여 저장
+        String encodedPassword = pwEncoder.encode(password);
+
+        usernameDuplicateCheck(requestDto);
+
+        User user = User.builder()
+                .username(username)
+                .password(encodedPassword)
+                .email(requestDto.getEmail())
                 .role(UserRole.USER)
                 .build();
-        userRepository.save(userinfo);
-    }
 
-    public void securitySignup(SignupRequestDto signupRequestDto) {
-        if (userRepository.existsByUsername(signupRequestDto.getUsername())) {
-            return;
-        }
+        userRepository.save(user);
 
-        signupRequestDto.setPassword(bCryptPasswordEncoder.encode(signupRequestDto.getPassword()));
-
-        User userinfo = User.builder()
-                .username(signupRequestDto.getUsername())
-                .password(signupRequestDto.getPassword())
-                .name(signupRequestDto.getName())
+        SignupResponseDto responseDto = SignupResponseDto.builder()
+                .username(requestDto.getUsername())
+                .name(requestDto.getName())
+                .email(requestDto.getEmail())
                 .role(UserRole.USER)
                 .build();
-//        userRepository.save(signupRequestDto.toEntity());
-        userRepository.save(userinfo);
+
+        return new ResponseEntity<>(new Message("회원 가입 성공", responseDto), HttpStatus.OK);
     }
 
-    public User login(LoginRequestDto loginRequestDto) {
-        String username = loginRequestDto.getUsername();
-        String password = loginRequestDto.getPassword();
-
-        Optional<User> userOptional = userRepository.findByUsername(username);
-
-        if (userOptional.isPresent()) {
-            User userInfo = userOptional.get();
-
-            if (bCryptPasswordEncoder.matches(password, userInfo.getPassword())) {
-                return userInfo; // 비밀번호가 일치하는 경우 사용자 정보 반환
-            } else {
-                return null; // 비밀번호가 일치하지 않는 경우 null 반환
-            }
-        } else {
-            return null; // 사용자가 존재하지 않는 경우 null 반환
-        }
-    }
-
-    public User getLoginUserById(Long userId) {
-        if (userId == null) return null;
-
-        Optional<User> findMember = userRepository.findById(userId);
-        return findMember.orElse(null);
-    }
-
-    public User getLoginUserByUsername(String username) {
-        if (username == null) {
-            return null; // 또는 적절한 예외를 던질 수 있습니다.
-        }
-
-        Optional<User> optionalUser = userRepository.findByUsername(username);
-        if (optionalUser.isPresent()) {
-            return optionalUser.get();
-        } else {
-            throw new UsernameNotFoundException("User not found with username: " + username);
+    public void usernameDuplicateCheck(SignupRequestDto requestDto) {
+        Optional<User> user = userRepository.findByUsername(requestDto.getUsername());
+        if (user.isPresent()) {
+            throw new CustomException(ErrorCode.ALREADY_SIGNUP_USER);
         }
     }
 
