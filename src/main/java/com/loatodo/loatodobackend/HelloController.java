@@ -7,6 +7,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class HelloController {
     @RequestMapping("/")
     public String Hello() {
-        return "http 배포 테스트 중입니다.6/23 %포 db ip 변경";
+        return "http 배포 테스트 중입니다.6/23 %불포함 db ip 적용";
     }
 }
