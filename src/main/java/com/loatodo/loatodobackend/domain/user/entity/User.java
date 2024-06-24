@@ -1,5 +1,7 @@
 package com.loatodo.loatodobackend.domain.user.entity;
 
+import com.loatodo.loatodobackend.domain.user.dto.UpdateUserDto;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import com.loatodo.loatodobackend.util.Timestamp;
 import com.loatodo.loatodobackend.util.UserRole;
 import jakarta.persistence.*;
@@ -7,8 +9,8 @@ import lombok.*;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @Builder
+@NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Table(name = "users")
@@ -40,19 +42,32 @@ public class User extends Timestamp {
     @Column
     private String providerId;
 
-//    @Builder
-//    public User(String username, String name, String email, String picture, UserRole role) {
-//        this.username = username;
-//        this.name = name;
-//        this.email = email;
-//        this.picture = picture;
-//        this.role = role;
+    // 정보 업데이트 메소드
+//    public void updateUserInfo(UpdateUserDto userDto) {
+////        if (newPassword != null) {
+////            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+////            this.password = encoder.encode(newPassword);
+////        }
+//        if (userDto.getPassword() != null) {
+//            this.password = userDto.getPassword();
+//        }
+//        if (userDto.getEmail() != null) {
+//            this.email = userDto.getEmail();
+//        }
+//        if (userDto.getName() != null) {
+//            this.name = userDto.getName();
+//        }
 //    }
-
-    public User update(String name) {
-        this.name = name;
-
-        return this;
+    public void updateUserInfo(String newPassword, String newName, String newEmail) {
+        if (newPassword != null) {
+            this.password = newPassword;
+        }
+        if (newName != null) {
+            this.name = newName;
+        }
+        if (newEmail != null) {
+            this.email = newEmail;
+        }
     }
 
     public String getRoleKey() {

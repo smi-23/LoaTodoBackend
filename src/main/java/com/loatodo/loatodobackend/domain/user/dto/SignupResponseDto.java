@@ -8,8 +8,9 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SignupResponseDto {
-    String username;
-    String email;
-    String name;
-    UserRole role;
+    private Long id;
+    private String username;
+    private String email;
+    private String name;
+    private UserRole role;
 }
