@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final UserService userService;
 
-    @GetMapping(value = {"", "/"})
+    @GetMapping("")
     public String index() {
         return "index";
     }

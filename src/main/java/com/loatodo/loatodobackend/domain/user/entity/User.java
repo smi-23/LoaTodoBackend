@@ -1,7 +1,5 @@
 package com.loatodo.loatodobackend.domain.user.entity;
 
-import com.loatodo.loatodobackend.domain.user.dto.UpdateUserDto;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import com.loatodo.loatodobackend.util.Timestamp;
 import com.loatodo.loatodobackend.util.UserRole;
 import jakarta.persistence.*;
