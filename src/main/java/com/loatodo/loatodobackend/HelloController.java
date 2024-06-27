@@ -7,6 +7,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class HelloController {
     @RequestMapping("/")
     public String Hello() {
-        return "http 배포 테스트 중입니다.6/20 다시1";
+        return "redis 도커 컴포즈 배포 테스트 중입니다. ";
     }
 }
