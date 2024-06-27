@@ -33,6 +33,7 @@ public class UserController {
         return userService.updateUserInfo(requestDto, userId);
     }
 
+    @PostMapping("/login")
     public ResponseEntity<Message> login(@RequestBody @Valid LoginRequestDto requestDto, HttpServletResponse response) {
         return userService.login(requestDto, response);
     }
