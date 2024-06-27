@@ -40,22 +40,6 @@ public class User extends Timestamp {
     @Column
     private String providerId;
 
-    // 정보 업데이트 메소드
-//    public void updateUserInfo(UpdateUserDto userDto) {
-////        if (newPassword != null) {
-////            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-////            this.password = encoder.encode(newPassword);
-////        }
-//        if (userDto.getPassword() != null) {
-//            this.password = userDto.getPassword();
-//        }
-//        if (userDto.getEmail() != null) {
-//            this.email = userDto.getEmail();
-//        }
-//        if (userDto.getName() != null) {
-//            this.name = userDto.getName();
-//        }
-//    }
     public void updateUserInfo(String newPassword, String newName, String newEmail) {
         if (newPassword != null) {
             this.password = newPassword;

@@ -1,14 +1,14 @@
 package com.loatodo.loatodobackend.domain.user.service;
 
-import com.loatodo.loatodobackend.domain.user.dto.SignupRequestDto;
-import com.loatodo.loatodobackend.domain.user.dto.SignupResponseDto;
-import com.loatodo.loatodobackend.domain.user.dto.UpdateUserDto;
+import com.loatodo.loatodobackend.domain.user.dto.*;
 import com.loatodo.loatodobackend.domain.user.entity.User;
 import com.loatodo.loatodobackend.domain.user.repository.UserRepository;
 import com.loatodo.loatodobackend.exception.CustomException;
 import com.loatodo.loatodobackend.exception.ErrorCode;
+import com.loatodo.loatodobackend.jwt.JwtUtil;
 import com.loatodo.loatodobackend.util.Message;
 import com.loatodo.loatodobackend.util.UserRole;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +25,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder pwEncoder;
+    private final JwtUtil jwtUtil;
 
     public ResponseEntity<Message> signup(SignupRequestDto requestDto) {
         String password = requestDto.getPassword();
@@ -52,6 +53,35 @@ public class UserService {
                 .build();
 
         return new ResponseEntity<>(new Message("회원 가입 성공", responseDto), HttpStatus.OK);
+    }
+
+    public ResponseEntity<Message> login(LoginRequestDto requestDto, HttpServletResponse response) {
+        Optional<User> optionalUser = userRepository.findByUsername(requestDto.getUsername());
+        if (optionalUser.isEmpty()) {
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
+        }
+        User user = optionalUser.get();
+
+        String password = requestDto.getPassword();
+        if(!pwEncoder.matches(password, user.getPassword())){
+            throw new CustomException(ErrorCode.INVALID_PASSWORD);
+        }
+
+        String accessToken = jwtUtil.createAccessToken(user);
+        String refreshToken = jwtUtil.createRefreshToken(user.getUsername());
+        // jwtToken 헤더에 넣어주기
+        response.addHeader("Authorization", accessToken);
+        response.addHeader("Authorization", refreshToken);
+
+        LoginResponseDto responseDto = LoginResponseDto.builder()
+                .id(user.getId())
+                .username(requestDto.getUsername())
+                .name(user.getName())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .build();
+
+        return new ResponseEntity<>(new Message("로그인 성공", responseDto), HttpStatus.OK);
     }
 
     public ResponseEntity<Message> updateUserInfo(UpdateUserDto updateUserDto, Long userId) {

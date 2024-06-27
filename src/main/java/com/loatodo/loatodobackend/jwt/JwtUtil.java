@@ -1,7 +1,10 @@
-package com.loatodo.loatodobackend.util;
+package com.loatodo.loatodobackend.jwt;
 
+
+import com.loatodo.loatodobackend.domain.user.entity.User;
 import com.loatodo.loatodobackend.exception.CustomException;
 import com.loatodo.loatodobackend.exception.ErrorCode;
+import com.loatodo.loatodobackend.util.UserRole;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -25,7 +28,8 @@ public class JwtUtil {
     public static final String AUTHORIZATION_HEADER = "Authorization";
     public static final String AUTHORIZATION_KEY = "auth";
     private static final String BEARER_PREFIX = "Bearer ";
-    private static final Duration TOKEN_VALIDITY = Duration.ofDays(30);
+    private static final Duration ACCESS_TOKEN_VALIDITY = Duration.ofDays(1);
+    private static final Duration REFRESH_TOKEN_VALIDITY = Duration.ofDays(30);
 
     private Key key;
     private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
@@ -40,9 +44,13 @@ public class JwtUtil {
         key = Keys.hmacShaKeyFor(bytes);
     }
 
-    // 토큰 생성
-    public String createToken(String username, UserRole role, String name, String email) {
+    // access토큰 생성
+    public String createAccessToken(User user) {
         Date date = new Date();
+        String username = user.getUsername();
+        String name = user.getName();
+        String email = user.getEmail();
+        UserRole role = user.getRole();
 
         return BEARER_PREFIX +
                 Jwts.builder()
@@ -50,7 +58,20 @@ public class JwtUtil {
                         .claim(AUTHORIZATION_KEY, role)
                         .claim("name", name)
                         .claim("email", email)
-                        .setExpiration(new Date(date.getTime() + TOKEN_VALIDITY.toMillis()))
+                        .setExpiration(new Date(date.getTime() + ACCESS_TOKEN_VALIDITY.toMillis()))
+                        .setIssuedAt(date)
+                        .signWith(key, signatureAlgorithm)
+                        .compact();
+    }
+
+    // refresh토큰 생성
+    public String createRefreshToken(String username) {
+        Date date = new Date();
+
+        return BEARER_PREFIX +
+                Jwts.builder()
+                        .setSubject(username)
+                        .setExpiration(new Date(date.getTime() + REFRESH_TOKEN_VALIDITY.toMillis()))
                         .setIssuedAt(date)
                         .signWith(key, signatureAlgorithm)
                         .compact();
