@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to LoaTodo</title>
+</head>
+<body>
+<h1>Welcome to LoaTodo</h1>
+<p>서비스를 이용하기 위해 로그인 해주세요.</p>
+
+<!-- 로그인 폼 -->
+<h2>로그인</h2>
+<form id="loginForm">
+    <label for="loginUsername">Username:</label><br>
+    <input type="text" id="loginUsername" name="username" required><br>
+    <label for="loginPassword">Password:</label><br>
+    <input type="password" id="loginPassword" name="password" required><br><br>
+    <input type="submit" value="로그인">
+</form>
+
+<a href="/oauth2/authorization/google">구글 로그인</a>
+
+<!-- 회원가입 버튼 -->
+<button onclick="toggleSignupForm()">회원 가입</button>
+
+<!-- 회원가입 폼 -->
+<div id="signupForm" style="display: none;">
+    <h2>회원 가입</h2>
+    <form id="signupFormInner">
+        <label for="signupUsername">Username:</label><br>
+        <input type="text" id="signupUsername" name="username" required><br>
+
+        <label for="signupPassword">Password:</label><br>
+        <input type="password" id="signupPassword" name="password" required><br>
+
+        <label for="passwordCheck">Password 확인:</label><br>
+        <input type="password" id="passwordCheck" name="passwordCheck" required><br>
+
+        <label for="name">이름:</label><br>
+        <input type="text" id="name" name="name" required><br>
+
+        <label for="email">이메일:</label><br>
+        <input type="email" id="email" name="email" required><br><br>
+
+        <input type="submit" value="회원 가입">
+    </form>
+</div>
+
+<script>
+  function toggleSignupForm() {
+    var signupForm = document.getElementById("signupForm");
+    if (signupForm.style.display === "none") {
+      signupForm.style.display = "block";
+    } else {
+      signupForm.style.display = "none";
+    }
+  }
+
+  // 회원 가입 폼 처리
+  document.getElementById("signupFormInner").addEventListener("submit", function(event) {
+    event.preventDefault(); // 기본 submit 동작 막기
+
+    var formData = {
+      username: document.getElementById("signupUsername").value,
+      password: document.getElementById("signupPassword").value,
+      passwordCheck: document.getElementById("passwordCheck").value,
+      name: document.getElementById("name").value,
+      email: document.getElementById("email").value
+    };
+
+    fetch("/general/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("회원 가입 중 오류가 발생했습니다.");
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log("Success:", data);
+        alert("회원 가입이 완료되었습니다.");
+        // 원하는 곳으로 리다이렉트 등 추가 처리 가능
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        alert(error.message); // 에러 메시지 출력
+      });
+  });
+</script>
+
+</body>
+</html>

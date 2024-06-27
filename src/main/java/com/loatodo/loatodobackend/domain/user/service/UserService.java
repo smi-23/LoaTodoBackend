@@ -1,12 +1,17 @@
 package com.loatodo.loatodobackend.domain.user.service;
 
-import com.loatodo.loatodobackend.domain.user.dto.LoginRequestDto;
-import com.loatodo.loatodobackend.domain.user.dto.SignupRequestDto;
+import com.loatodo.loatodobackend.domain.user.dto.*;
 import com.loatodo.loatodobackend.domain.user.entity.User;
 import com.loatodo.loatodobackend.domain.user.repository.UserRepository;
+import com.loatodo.loatodobackend.exception.CustomException;
+import com.loatodo.loatodobackend.exception.ErrorCode;
+import com.loatodo.loatodobackend.jwt.JwtUtil;
+import com.loatodo.loatodobackend.util.Message;
 import com.loatodo.loatodobackend.util.UserRole;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,76 +24,123 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final BCryptPasswordEncoder pwEncoder;
+    private final JwtUtil jwtUtil;
 
-    public boolean checkLoginIdDuplicate(String username) {
-        return userRepository.existsByUsername(username);
-    }
+    public ResponseEntity<Message> signup(SignupRequestDto requestDto) {
+        String password = requestDto.getPassword();
+        String passwordCheck = requestDto.getPasswordCheck();
 
-    public void signup(SignupRequestDto signupRequestDto) {
-        User userinfo = User.builder()
-                .username(signupRequestDto.getUsername())
-                .password(signupRequestDto.getPassword())
-                .name(signupRequestDto.getName())
+        checkUsernameDuplicate(requestDto.getUsername());
+        String encodedPassword = passwordEncodingAndCheck(password, passwordCheck);
+
+        User user = User.builder()
+                .username(requestDto.getUsername())
+                .password(encodedPassword)
+                .email(requestDto.getEmail())
+                .name(requestDto.getName())
                 .role(UserRole.USER)
                 .build();
-        userRepository.save(userinfo);
-    }
 
-    public void securitySignup(SignupRequestDto signupRequestDto) {
-        if (userRepository.existsByUsername(signupRequestDto.getUsername())) {
-            return;
-        }
+        userRepository.save(user);
 
-        signupRequestDto.setPassword(bCryptPasswordEncoder.encode(signupRequestDto.getPassword()));
-
-        User userinfo = User.builder()
-                .username(signupRequestDto.getUsername())
-                .password(signupRequestDto.getPassword())
-                .name(signupRequestDto.getName())
+        SignupResponseDto responseDto = SignupResponseDto.builder()
+                .id(user.getId())
+                .username(requestDto.getUsername())
+                .name(requestDto.getName())
+                .email(requestDto.getEmail())
                 .role(UserRole.USER)
                 .build();
-//        userRepository.save(signupRequestDto.toEntity());
-        userRepository.save(userinfo);
+
+        return new ResponseEntity<>(new Message("회원 가입 성공", responseDto), HttpStatus.OK);
     }
 
-    public User login(LoginRequestDto loginRequestDto) {
-        String username = loginRequestDto.getUsername();
-        String password = loginRequestDto.getPassword();
+    public ResponseEntity<Message> login(LoginRequestDto requestDto, HttpServletResponse response) {
+        Optional<User> optionalUser = userRepository.findByUsername(requestDto.getUsername());
+        if (optionalUser.isEmpty()) {
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
+        }
+        User user = optionalUser.get();
 
-        Optional<User> userOptional = userRepository.findByUsername(username);
+        String password = requestDto.getPassword();
+        if(!pwEncoder.matches(password, user.getPassword())){
+            throw new CustomException(ErrorCode.INVALID_PASSWORD);
+        }
 
-        if (userOptional.isPresent()) {
-            User userInfo = userOptional.get();
+        String accessToken = jwtUtil.createAccessToken(user);
+        String refreshToken = jwtUtil.createRefreshToken(user.getUsername());
+        // jwtToken 헤더에 넣어주기
+        response.addHeader("Authorization", accessToken);
+        response.addHeader("Authorization", refreshToken);
 
-            if (bCryptPasswordEncoder.matches(password, userInfo.getPassword())) {
-                return userInfo; // 비밀번호가 일치하는 경우 사용자 정보 반환
-            } else {
-                return null; // 비밀번호가 일치하지 않는 경우 null 반환
-            }
-        } else {
-            return null; // 사용자가 존재하지 않는 경우 null 반환
+        LoginResponseDto responseDto = LoginResponseDto.builder()
+                .id(user.getId())
+                .username(requestDto.getUsername())
+                .name(user.getName())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .build();
+
+        return new ResponseEntity<>(new Message("로그인 성공", responseDto), HttpStatus.OK);
+    }
+
+    public ResponseEntity<Message> updateUserInfo(UpdateUserDto updateUserDto, Long userId) {
+        // userId를 받아오거나 로그인을 구현하면서 jwt토큰을 통해서 유저가 존재하는지 확인하도록 변경할 필요가 있음
+
+        // 유저를 찾는 메서드 호출
+        Optional<User> user = findUser(userId);
+        User updateUser = user.get();
+
+        String currentPassword = updateUserDto.getCurrentPassword();
+        String newPassword = updateUserDto.getNewPassword();
+        String newPasswordCheck = updateUserDto.getNewPasswordCheck();
+
+        if (!pwEncoder.matches(currentPassword, updateUser.getPassword())){
+            throw new CustomException(ErrorCode.INVALID_PASSWORD);
+        }
+        checkPasswordMatch(currentPassword, newPassword);
+        String newEncodedPassword = passwordEncodingAndCheck(newPassword, newPasswordCheck);
+        String newName = updateUserDto.getName();
+        String newEmail = updateUserDto.getEmail();
+
+        updateUser.updateUserInfo(newEncodedPassword, newName, newEmail);
+
+        userRepository.save(updateUser);
+
+        SignupResponseDto responseDto = SignupResponseDto.builder()
+                .id(updateUser.getId())
+                .username(updateUser.getUsername())
+                .name(updateUser.getName())
+                .email(updateUser.getEmail())
+                .role(updateUser.getRole())
+                .build();
+
+        return new ResponseEntity<>(new Message("회원 정보 수정 성공", responseDto), HttpStatus.OK);
+    }
+
+    public Optional<User> findUser(Long userId) {
+        Optional<User> user = userRepository.findById(userId);
+        if (user.isEmpty()) {
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
+        }
+        return user;
+    }
+
+    public void checkUsernameDuplicate(String username) {
+        Optional<User> user = userRepository.findByUsername(username);
+        if (user.isPresent()) {
+            throw new CustomException(ErrorCode.ALREADY_SIGNUP_USER);
         }
     }
 
-    public User getLoginUserById(Long userId) {
-        if (userId == null) return null;
-
-        Optional<User> findMember = userRepository.findById(userId);
-        return findMember.orElse(null);
+    public String passwordEncodingAndCheck(String password, String passwordCheck) {
+        checkPasswordMatch(password, passwordCheck);
+        return pwEncoder.encode(password);
     }
 
-    public User getLoginUserByUsername(String username) {
-        if (username == null) {
-            return null; // 또는 적절한 예외를 던질 수 있습니다.
-        }
-
-        Optional<User> optionalUser = userRepository.findByUsername(username);
-        if (optionalUser.isPresent()) {
-            return optionalUser.get();
-        } else {
-            throw new UsernameNotFoundException("User not found with username: " + username);
+    private void checkPasswordMatch(String password, String passwordCheck) {
+        if (!password.equals(passwordCheck)) {
+            throw new CustomException(ErrorCode.PASSWORD_NOT_MATCH);
         }
     }
-
 }

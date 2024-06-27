@@ -2,7 +2,7 @@ package com.loatodo.loatodobackend.domain.user.controller;
 
 import com.loatodo.loatodobackend.domain.user.dto.SignupRequestDto;
 import com.loatodo.loatodobackend.domain.user.entity.User;
-import com.loatodo.loatodobackend.domain.user.service.UserService;
+import com.loatodo.loatodobackend.domain.user.service.UserService_temp;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -24,7 +24,7 @@ import java.util.Iterator;
 @RequiredArgsConstructor
 @RequestMapping("/oauth-login")
 public class OAuthController {
-    private final UserService userService;
+    private final UserService_temp userService;
 
     @GetMapping(value = {"", "/"})
     public String home(Model model) {
