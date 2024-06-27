@@ -89,7 +89,6 @@ jobs:
           script: |
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo
             sudo docker stop $(sudo docker ps -q) 2>/dev/null || true
-#            sudo docker run --name github-actions-demo --rm -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo
             docker-compose up -d
             sudo docker system prune -f
 
@@ -108,3 +107,5 @@ jobs:
 #      # 미사용 이미지를 정리합니다
 #      - name: delete old docker image
 #        run: sudo docker system prune -f
+
+#            sudo docker run --name github-actions-demo --rm -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo
