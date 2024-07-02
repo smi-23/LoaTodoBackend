@@ -5,6 +5,7 @@ import com.loatodo.loatodobackend.domain.user.dto.SignupRequestDto;
 import com.loatodo.loatodobackend.domain.user.dto.UpdateUserDto;
 import com.loatodo.loatodobackend.domain.user.service.UserService;
 import com.loatodo.loatodobackend.util.Message;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,8 +30,8 @@ public class UserController {
     }
 
     @PostMapping("/signup/update/{userId}")
-    public ResponseEntity<Message> updateUserInfo(@RequestBody @Valid UpdateUserDto requestDto, @PathVariable Long userId) {
-        return userService.updateUserInfo(requestDto, userId);
+    public ResponseEntity<Message> updateUserInfo(@RequestBody @Valid UpdateUserDto requestDto, @PathVariable Long userId, HttpServletRequest request, HttpServletResponse response) {
+        return userService.updateUserInfo(requestDto, userId, request, response);
     }
 
     @PostMapping("/login")
