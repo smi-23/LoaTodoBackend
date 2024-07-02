@@ -8,6 +8,7 @@ import com.loatodo.loatodobackend.exception.ErrorCode;
 import com.loatodo.loatodobackend.jwt.JwtUtil;
 import com.loatodo.loatodobackend.util.Message;
 import com.loatodo.loatodobackend.util.UserRole;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -71,7 +73,7 @@ public class UserService {
         String refreshToken = jwtUtil.createRefreshToken(user.getUsername());
         // jwtToken 헤더에 넣어주기
         response.addHeader("Authorization", accessToken);
-        response.addHeader("Authorization", refreshToken);
+        response.addHeader("Refresh-Token", refreshToken);
 
         LoginResponseDto responseDto = LoginResponseDto.builder()
                 .id(user.getId())
@@ -84,8 +86,18 @@ public class UserService {
         return new ResponseEntity<>(new Message("로그인 성공", responseDto), HttpStatus.OK);
     }
 
-    public ResponseEntity<Message> updateUserInfo(UpdateUserDto updateUserDto, Long userId) {
-        // userId를 받아오거나 로그인을 구현하면서 jwt토큰을 통해서 유저가 존재하는지 확인하도록 변경할 필요가 있음
+    public ResponseEntity<Message> updateUserInfo(UpdateUserDto updateUserDto, Long userId, HttpServletRequest request, HttpServletResponse response) {
+        // 액세스 토큰을 확인하고 만료된 경우 리프레시 토큰을 이용해 새로운 액세스 토큰과 리프레시 토큰을 발급받음
+        String accessToken = jwtUtil.resolveToken(request, JwtUtil.AUTHORIZATION_HEADER);
+        if (accessToken != null && !jwtUtil.validateToken(accessToken)) {
+            Map<String, String> newTokens = jwtUtil.refreshTokens(request);
+            accessToken = newTokens.get("accessToken");
+            String newRefreshToken = newTokens.get("refreshToken");
+
+            // 응답 헤더에 새로운 액세스 토큰과 리프레시 토큰을 추가
+            response.addHeader(JwtUtil.AUTHORIZATION_HEADER, accessToken);
+            response.addHeader(JwtUtil.REFRESH_HEADER, newRefreshToken);
+        }
 
         // 유저를 찾는 메서드 호출
         Optional<User> user = findUser(userId);
