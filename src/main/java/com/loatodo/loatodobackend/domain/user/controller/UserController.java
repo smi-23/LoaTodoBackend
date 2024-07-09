@@ -2,7 +2,9 @@ package com.loatodo.loatodobackend.domain.user.controller;
 
 import com.loatodo.loatodobackend.domain.user.dto.LoginRequestDto;
 import com.loatodo.loatodobackend.domain.user.dto.SignupRequestDto;
-import com.loatodo.loatodobackend.domain.user.dto.UpdateUserDto;
+import com.loatodo.loatodobackend.domain.user.dto.update.UpdateEmailDto;
+import com.loatodo.loatodobackend.domain.user.dto.update.UpdateNameDto;
+import com.loatodo.loatodobackend.domain.user.dto.update.UpdatePasswordDto;
 import com.loatodo.loatodobackend.domain.user.service.UserService;
 import com.loatodo.loatodobackend.util.Message;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("general")
+@RequestMapping("user/api")
 public class UserController {
     private final UserService userService;
 
@@ -29,14 +31,29 @@ public class UserController {
         return userService.signup(reqeustDto);
     }
 
-    @PostMapping("/signup/update/{userId}")
-    public ResponseEntity<Message> updateUserInfo(@RequestBody @Valid UpdateUserDto requestDto, @PathVariable Long userId, HttpServletRequest request, HttpServletResponse response) {
-        return userService.updateUserInfo(requestDto, userId, request, response);
-    }
-
     @PostMapping("/login")
     public ResponseEntity<Message> login(@RequestBody @Valid LoginRequestDto requestDto, HttpServletResponse response) {
         return userService.login(requestDto, response);
+    }
+
+    @PostMapping("/update/email")
+    public ResponseEntity<Message> updateEmail(@RequestBody @Valid UpdateEmailDto requestDto, HttpServletRequest request, HttpServletResponse response) {
+        return userService.updateEmail(requestDto, request, response);
+    }
+
+    @PostMapping("/update/name")
+    public ResponseEntity<Message> updateName(@RequestBody @Valid UpdateNameDto requestDto, HttpServletRequest request, HttpServletResponse response) {
+        return userService.updateName(requestDto, request, response);
+    }
+
+    @PostMapping("/update/password")
+    public ResponseEntity<Message> updatePassword(@RequestBody @Valid UpdatePasswordDto requestDto, HttpServletRequest request, HttpServletResponse response) {
+        return userService.updatePassword(requestDto, request, response);
+    }
+
+    @PostMapping("/refresh-tokens")
+    public ResponseEntity<Message> refreshTokens(HttpServletRequest request, HttpServletResponse response) {
+        return userService.refreshTokens(request, response);
     }
 
 }

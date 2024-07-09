@@ -2,6 +2,8 @@ package com.loatodo.loatodobackend.jwt;
 
 
 import com.loatodo.loatodobackend.domain.user.entity.User;
+import com.loatodo.loatodobackend.domain.user.repository.UserRepository;
+import com.loatodo.loatodobackend.domain.user.service.UserService;
 import com.loatodo.loatodobackend.exception.CustomException;
 import com.loatodo.loatodobackend.exception.ErrorCode;
 import com.loatodo.loatodobackend.util.UserRole;
@@ -9,6 +11,7 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,10 +21,7 @@ import org.springframework.util.StringUtils;
 
 import java.security.Key;
 import java.time.Duration;
-import java.util.Base64;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -33,7 +33,7 @@ public class JwtUtil {
     public static final String REFRESH_HEADER = "Refresh-Token";
     public static final String AUTHORIZATION_KEY = "auth";
     private static final String BEARER_PREFIX = "Bearer ";
-    private static final Duration ACCESS_TOKEN_VALIDITY = Duration.ofDays(1);
+    private static final Duration ACCESS_TOKEN_VALIDITY = Duration.ofSeconds(20);
     private static final Duration REFRESH_TOKEN_VALIDITY = Duration.ofDays(30);
 
     private Key key;
@@ -43,6 +43,7 @@ public class JwtUtil {
     @Value("${jwt.secret.key}")
     private String secretKey;
 
+    private final UserRepository userRepository;
 
     @PostConstruct
     public void init() {
@@ -72,26 +73,19 @@ public class JwtUtil {
 
     // refresh토큰 생성
     public String createRefreshToken(String username) {
-        Date date = new Date();
-
-        String refreshToken = BEARER_PREFIX +
-                Jwts.builder()
-                        .setSubject(username)
-                        .setExpiration(new Date(date.getTime() + REFRESH_TOKEN_VALIDITY.toMillis()))
-                        .setIssuedAt(date)
-                        .signWith(key, signatureAlgorithm)
-                        .compact();
+        String refreshToken = UUID.randomUUID().toString();
         redisTemplate.opsForValue().set(username, refreshToken, REFRESH_TOKEN_VALIDITY.toMillis(), TimeUnit.MILLISECONDS);
         return refreshToken;
     }
 
     // claim 가져오기
-    public Claims getClaims(HttpServletRequest request) {
-        String jwtToken = resolveToken(request, AUTHORIZATION_HEADER);
-        if (jwtToken == null || !validateToken(jwtToken)) {
+    public Claims getClaims(HttpServletRequest request, HttpServletResponse response) {
+        // 토큰을 헤더에서 가져옴
+        String accessToken = resolveToken(request, AUTHORIZATION_HEADER);
+        if (accessToken == null || !validateAccessToken(accessToken)) {
             throw new CustomException(ErrorCode.AUTHENTICATION_FAILED);
         }
-        return getUserInfoFromToken(jwtToken);
+        return getUserInfoFromToken(accessToken);
     }
 
     // header 토큰을 가져오기
@@ -104,7 +98,7 @@ public class JwtUtil {
     }
 
     // 토큰 검증
-    public boolean validateToken(String token) {
+    public boolean validateAccessToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
@@ -112,6 +106,7 @@ public class JwtUtil {
             log.info("Invalid JWT signature, 유효하지 않는 JWT 서명 입니다.");
         } catch (ExpiredJwtException e) {
             log.info("Expired JWT token, 만료된 JWT token 입니다.");
+            throw new CustomException(ErrorCode.ACCESS_TOKEN_EXPIRED);
         } catch (UnsupportedJwtException e) {
             log.info("Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다.");
         } catch (IllegalArgumentException e) {
@@ -122,46 +117,27 @@ public class JwtUtil {
 
     // 토큰에서 사용자 정보 가져오기
     public Claims getUserInfoFromToken(String token) {
-        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+        return Jwts.parserBuilder().setAllowedClockSkewSeconds(30).setSigningKey(key).build().parseClaimsJws(token).getBody();
     }
 
-    // 리프레시 토큰 검증
-    public boolean validateRefreshToken(String refreshToken) {
-        try {
-            String username = getUserInfoFromToken(refreshToken).getSubject();
-            String redisToken = (String) redisTemplate.opsForValue().get(username);
-            if (refreshToken.equals(redisToken)) {
-                return true;
-            }
-        } catch (Exception e) {
-            log.error("Invalid refresh token", e);
-        }
-        return false;
+    public void refreshTokens(User user, HttpServletResponse response) {
+        // 리프레시토큰 검증
+        validateRefreshToken(user.getUsername());
+
+        // 해당 유저정보를 바탕으로 토큰을 재발급
+        String accessToken = createAccessToken(user);
+        String refreshToken = createRefreshToken(user.getUsername());
+        // jwtToken 헤더에 넣어주기
+        response.addHeader("Authorization", accessToken);
+        response.addHeader("Refresh-Token", refreshToken);
     }
 
-    // 리프레시 토큰을 사용하여 새로운 액세스 토큰과 리프레시 토큰 발급
-    public Map<String, String> refreshTokens(HttpServletRequest request) {
-        String refreshToken = resolveToken(request, REFRESH_HEADER);
-        if (refreshToken == null || !validateRefreshToken(refreshToken)) {
-            throw new CustomException(ErrorCode.AUTHENTICATION_FAILED);
+    // 리프레시토큰 검증
+    public void validateRefreshToken(String username) {
+        // 인자로 받아온 토큰이 레디스에 저장되어 있는지
+        String refreshToken = (String) redisTemplate.opsForValue().get(username);
+        if (refreshToken == null) {
+            throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
-        Claims claims = getUserInfoFromToken(refreshToken);
-        String username = claims.getSubject();
-        User user = new User(); // User 객체를 DB에서 가져와야 함
-        user.setUsername(username);
-        user.setRole(UserRole.valueOf(claims.get(AUTHORIZATION_KEY).toString()));
-        // name과 email 등 필요한 정보도 설정
-
-        String newAccessToken = createAccessToken(user);
-        String newRefreshToken = createRefreshToken(username);
-
-        // 새 리프레시 토큰을 Redis에 저장
-        redisTemplate.opsForValue().set(username, newRefreshToken, REFRESH_TOKEN_VALIDITY.toMillis(), TimeUnit.MILLISECONDS);
-
-        Map<String, String> tokens = new HashMap<>();
-        tokens.put("accessToken", newAccessToken);
-        tokens.put("refreshToken", newRefreshToken);
-
-        return tokens;
     }
 }
