@@ -86,8 +86,8 @@ public class UserService {
         return new ResponseEntity<>(new Message("로그인 성공", responseDto), HttpStatus.OK);
     }
 
-    public ResponseEntity<Message> updateEmail(UpdateEmailDto Dto, HttpServletRequest request, HttpServletResponse response) {
-        Claims claim = jwtUtil.getClaims(request, response);
+    public ResponseEntity<Message> updateEmail(UpdateEmailDto Dto, HttpServletRequest request) {
+        Claims claim = jwtUtil.getClaims(request);
         User user = findUser(claim.getSubject());
         String currentEmail = user.getEmail();
 
@@ -103,8 +103,8 @@ public class UserService {
         return new ResponseEntity<>(new Message("회원 이메일 수정 성공", responseDto), HttpStatus.OK);
     }
 
-    public ResponseEntity<Message> updateName(UpdateNameDto Dto, HttpServletRequest request, HttpServletResponse response) {
-        Claims claim = jwtUtil.getClaims(request, response);
+    public ResponseEntity<Message> updateName(UpdateNameDto Dto, HttpServletRequest request) {
+        Claims claim = jwtUtil.getClaims(request);
         User user = findUser(claim.getSubject());
         String currentName = user.getName();
 
@@ -120,8 +120,8 @@ public class UserService {
         return new ResponseEntity<>(new Message("회원 이름 수정 성공", responseDto), HttpStatus.OK);
     }
 
-    public ResponseEntity<Message> updatePassword(UpdatePasswordDto Dto, HttpServletRequest request, HttpServletResponse response) {
-        Claims claim = jwtUtil.getClaims(request, response);
+    public ResponseEntity<Message> updatePassword(UpdatePasswordDto Dto, HttpServletRequest request) {
+        Claims claim = jwtUtil.getClaims(request);
         User user = findUser(claim.getSubject());
 
         String currentPassword = user.getPassword();
@@ -148,7 +148,7 @@ public class UserService {
         User user = findUser(claim.getSubject());
 
         // 리프레시토큰 검증
-        jwtUtil.refreshTokens(user, response);
+        jwtUtil.refreshTokens(user,request, response);
         return new ResponseEntity<>(new Message("토큰 재발급 성공", null), HttpStatus.OK);
     }
 

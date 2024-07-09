@@ -43,8 +43,6 @@ public class JwtUtil {
     @Value("${jwt.secret.key}")
     private String secretKey;
 
-    private final UserRepository userRepository;
-
     @PostConstruct
     public void init() {
         byte[] bytes = Base64.getDecoder().decode(secretKey);
@@ -79,7 +77,7 @@ public class JwtUtil {
     }
 
     // claim 가져오기
-    public Claims getClaims(HttpServletRequest request, HttpServletResponse response) {
+    public Claims getClaims(HttpServletRequest request) {
         // 토큰을 헤더에서 가져옴
         String accessToken = resolveToken(request, AUTHORIZATION_HEADER);
         if (accessToken == null || !validateAccessToken(accessToken)) {
@@ -120,9 +118,9 @@ public class JwtUtil {
         return Jwts.parserBuilder().setAllowedClockSkewSeconds(30).setSigningKey(key).build().parseClaimsJws(token).getBody();
     }
 
-    public void refreshTokens(User user, HttpServletResponse response) {
+    public void refreshTokens(User user, HttpServletRequest request, HttpServletResponse response) {
         // 리프레시토큰 검증
-        validateRefreshToken(user.getUsername());
+        validateRefreshToken(user.getUsername(), request);
 
         // 해당 유저정보를 바탕으로 토큰을 재발급
         String accessToken = createAccessToken(user);
@@ -133,10 +131,16 @@ public class JwtUtil {
     }
 
     // 리프레시토큰 검증
-    public void validateRefreshToken(String username) {
+    public void validateRefreshToken(String username, HttpServletRequest request) {
         // 인자로 받아온 토큰이 레디스에 저장되어 있는지
-        String refreshToken = (String) redisTemplate.opsForValue().get(username);
-        if (refreshToken == null) {
+        String redisToken = (String) redisTemplate.opsForValue().get(username);
+        if (redisToken == null) {
+            throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRED);
+        }
+        String refreshToken =  request.getHeader(REFRESH_HEADER);
+        log.error("redisToken = {}", redisToken);
+        log.error("refreshToken = {}", refreshToken);
+        if (!refreshToken.equals(redisToken)) {
             throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
     }

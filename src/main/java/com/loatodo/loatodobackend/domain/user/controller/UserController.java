@@ -37,18 +37,18 @@ public class UserController {
     }
 
     @PostMapping("/update/email")
-    public ResponseEntity<Message> updateEmail(@RequestBody @Valid UpdateEmailDto requestDto, HttpServletRequest request, HttpServletResponse response) {
-        return userService.updateEmail(requestDto, request, response);
+    public ResponseEntity<Message> updateEmail(@RequestBody @Valid UpdateEmailDto requestDto, HttpServletRequest request) {
+        return userService.updateEmail(requestDto, request);
     }
 
     @PostMapping("/update/name")
-    public ResponseEntity<Message> updateName(@RequestBody @Valid UpdateNameDto requestDto, HttpServletRequest request, HttpServletResponse response) {
-        return userService.updateName(requestDto, request, response);
+    public ResponseEntity<Message> updateName(@RequestBody @Valid UpdateNameDto requestDto, HttpServletRequest request) {
+        return userService.updateName(requestDto, request);
     }
 
     @PostMapping("/update/password")
-    public ResponseEntity<Message> updatePassword(@RequestBody @Valid UpdatePasswordDto requestDto, HttpServletRequest request, HttpServletResponse response) {
-        return userService.updatePassword(requestDto, request, response);
+    public ResponseEntity<Message> updatePassword(@RequestBody @Valid UpdatePasswordDto requestDto, HttpServletRequest request) {
+        return userService.updatePassword(requestDto, request);
     }
 
     @PostMapping("/refresh-tokens")
