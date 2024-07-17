@@ -15,6 +15,7 @@ import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 @Service
+@Slf4j
 @Transactional
 @RequiredArgsConstructor
 public class UserService {
@@ -73,7 +75,7 @@ public class UserService {
         String refreshToken = jwtUtil.createRefreshToken(user.getUsername());
         // jwtToken 헤더에 넣어주기
         response.addHeader("Authorization", accessToken);
-        response.addHeader("Refresh-Token", refreshToken);
+        response.addHeader("RefreshToken", refreshToken);
 
         LoginResponseDto responseDto = LoginResponseDto.builder()
                 .id(user.getId())
@@ -82,6 +84,8 @@ public class UserService {
                 .email(user.getEmail())
                 .role(user.getRole())
                 .build();
+
+        log.info("로그인 되었습니다.");
 
         return new ResponseEntity<>(new Message("로그인 성공", responseDto), HttpStatus.OK);
     }
@@ -152,6 +156,12 @@ public class UserService {
         return new ResponseEntity<>(new Message("토큰 재발급 성공", null), HttpStatus.OK);
     }
 
+    public ResponseEntity<Message> checkUsername(String username) {
+        checkUsernameDuplicate(username);
+        return ResponseEntity.ok(new Message("사용 가능한 유저네임입니다.", null));
+    }
+
+
     public User findUser(String username) {
         Optional<User> user = userRepository.findByUsername(username);
         if (user.isEmpty()) {
@@ -159,6 +169,7 @@ public class UserService {
         }
         return user.get();
     }
+
 
     public void checkUsernameDuplicate(String username) {
         Optional<User> user = userRepository.findByUsername(username);

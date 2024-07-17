@@ -2,8 +2,6 @@ package com.loatodo.loatodobackend.jwt;
 
 
 import com.loatodo.loatodobackend.domain.user.entity.User;
-import com.loatodo.loatodobackend.domain.user.repository.UserRepository;
-import com.loatodo.loatodobackend.domain.user.service.UserService;
 import com.loatodo.loatodobackend.exception.CustomException;
 import com.loatodo.loatodobackend.exception.ErrorCode;
 import com.loatodo.loatodobackend.util.UserRole;
@@ -30,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 public class JwtUtil {
 
     public static final String AUTHORIZATION_HEADER = "Authorization";
-    public static final String REFRESH_HEADER = "Refresh-Token";
+    public static final String REFRESH_HEADER = "RefreshToken";
     public static final String AUTHORIZATION_KEY = "auth";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final Duration ACCESS_TOKEN_VALIDITY = Duration.ofSeconds(20);
@@ -115,7 +113,7 @@ public class JwtUtil {
 
     // 토큰에서 사용자 정보 가져오기
     public Claims getUserInfoFromToken(String token) {
-        return Jwts.parserBuilder().setAllowedClockSkewSeconds(30).setSigningKey(key).build().parseClaimsJws(token).getBody();
+        return Jwts.parserBuilder().setAllowedClockSkewSeconds(300).setSigningKey(key).build().parseClaimsJws(token).getBody();
     }
 
     public void refreshTokens(User user, HttpServletRequest request, HttpServletResponse response) {
@@ -125,9 +123,12 @@ public class JwtUtil {
         // 해당 유저정보를 바탕으로 토큰을 재발급
         String accessToken = createAccessToken(user);
         String refreshToken = createRefreshToken(user.getUsername());
+        log.info("반환된 액세스토큰 {}", accessToken);
+        log.info("반환된 리프레시토큰 {}", refreshToken);
+
         // jwtToken 헤더에 넣어주기
         response.addHeader("Authorization", accessToken);
-        response.addHeader("Refresh-Token", refreshToken);
+        response.addHeader("RefreshToken", refreshToken);
     }
 
     // 리프레시토큰 검증
@@ -138,8 +139,6 @@ public class JwtUtil {
             throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRED);
         }
         String refreshToken =  request.getHeader(REFRESH_HEADER);
-        log.error("redisToken = {}", redisToken);
-        log.error("refreshToken = {}", refreshToken);
         if (!refreshToken.equals(redisToken)) {
             throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
         }

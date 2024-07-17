@@ -16,7 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @RequiredArgsConstructor
 public class SecurityConfig {
     // 시큐리티 필터 메서드
-    @Bean
+    @Bean(name = "webSecurityFilterChain")
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
 
         // 접근 권한 설정

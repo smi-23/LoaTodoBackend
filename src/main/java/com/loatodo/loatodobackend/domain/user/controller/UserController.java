@@ -9,22 +9,24 @@ import com.loatodo.loatodobackend.domain.user.service.UserService;
 import com.loatodo.loatodobackend.util.Message;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
+@Slf4j
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("user/api")
+@RequestMapping("api/user")
 public class UserController {
     private final UserService userService;
-
-    @GetMapping("")
-    public String index() {
-        return "index";
-    }
 
     @PostMapping("/signup")
     public ResponseEntity<Message> signup(@RequestBody @Valid SignupRequestDto reqeustDto) {
@@ -51,9 +53,21 @@ public class UserController {
         return userService.updatePassword(requestDto, request);
     }
 
+
     @PostMapping("/refresh-tokens")
     public ResponseEntity<Message> refreshTokens(HttpServletRequest request, HttpServletResponse response) {
+        String accessToken =  request.getHeader("Authorization");
+        String refreshToken =  request.getHeader("RefreshToken");
+        log.info(accessToken);
+        log.info(refreshToken);
+
         return userService.refreshTokens(request, response);
+    }
+
+    @PostMapping("/check-username")
+    public ResponseEntity<Message> checkUsername(@RequestBody Map<String, String> usernameMap) {
+        String username = usernameMap.get("username");
+        return userService.checkUsername(username);
     }
 
 }
