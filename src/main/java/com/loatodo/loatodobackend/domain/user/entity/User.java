@@ -40,6 +40,9 @@ public class User extends Timestamp {
     @Column
     private String providerId;
 
+    @Column
+    private String picture;
+
     public void updateName(String newName) {
         if (newName != null) {
             this.name = newName;
