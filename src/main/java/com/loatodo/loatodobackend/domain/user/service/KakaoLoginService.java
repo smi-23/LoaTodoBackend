@@ -7,8 +7,6 @@ import com.loatodo.loatodobackend.domain.user.dto.kakao.KakaoProfile;
 import com.loatodo.loatodobackend.domain.user.dto.LoginResponseDto;
 import com.loatodo.loatodobackend.domain.user.entity.User;
 import com.loatodo.loatodobackend.domain.user.repository.UserRepository;
-import com.loatodo.loatodobackend.exception.CustomException;
-import com.loatodo.loatodobackend.exception.ErrorCode;
 import com.loatodo.loatodobackend.jwt.JwtUtil;
 import com.loatodo.loatodobackend.util.Message;
 import com.loatodo.loatodobackend.util.UserRole;
@@ -29,7 +27,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class Oauth2KakaoService {
+public class KakaoLoginService {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
 
@@ -51,7 +49,7 @@ public class Oauth2KakaoService {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", "authorization_code");
         params.add("client_id", kakao_client_id);
-        params.add("redirect_uri", kakao_redirect_uri);
+//        params.add("redirect_uri", kakao_redirect_uri);
         params.add("code", code);
 //        params.add("client_secret", "{시크릿 키}"); // 생략 가능!
 
@@ -147,7 +145,7 @@ public class Oauth2KakaoService {
                 .role(user.getRole())
                 .build();
 
-        log.info("로그인 되었습니다.");
+        log.info("카카오 로그인 되었습니다.");
 
         return new ResponseEntity<>(new Message("카카오 로그인 성공", responseDto), HttpStatus.OK);
     }
