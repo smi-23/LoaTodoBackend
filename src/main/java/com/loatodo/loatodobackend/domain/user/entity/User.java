@@ -40,17 +40,27 @@ public class User extends Timestamp {
     @Column
     private String providerId;
 
-    public void updateUserInfo(String newPassword, String newName, String newEmail) {
-        if (newPassword != null) {
-            this.password = newPassword;
-        }
+    @Column
+    private String picture;
+
+    public void updateName(String newName) {
         if (newName != null) {
             this.name = newName;
         }
+    }
+
+    public void updateEmail(String newEmail) {
         if (newEmail != null) {
             this.email = newEmail;
         }
     }
+
+    public void updatePassword(String newPassword) {
+        if (newPassword != null) {
+            this.password = newPassword;
+        }
+    }
+
 
     public String getRoleKey() {
         return this.role.getKey();
