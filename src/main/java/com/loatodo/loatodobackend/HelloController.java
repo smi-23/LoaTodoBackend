@@ -7,6 +7,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class HelloController {
     @RequestMapping("/")
     public String Hello() {
-        return "도커 컴포즈 재설치 후 재실행";
+        return "재실행 후 재 커밋 테스트";
     }
 }
