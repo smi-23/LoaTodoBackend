@@ -31,7 +31,7 @@ public class JwtUtil {
     public static final String REFRESH_HEADER = "RefreshToken";
     public static final String AUTHORIZATION_KEY = "auth";
     private static final String BEARER_PREFIX = "Bearer ";
-    private static final Duration ACCESS_TOKEN_VALIDITY = Duration.ofSeconds(60);
+    private static final Duration ACCESS_TOKEN_VALIDITY = Duration.ofSeconds(600);
     private static final Duration REFRESH_TOKEN_VALIDITY = Duration.ofDays(7);
 
     private Key key;
