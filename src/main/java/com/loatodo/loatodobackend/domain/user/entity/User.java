@@ -1,9 +1,13 @@
 package com.loatodo.loatodobackend.domain.user.entity;
 
+import com.loatodo.loatodobackend.domain.board.entity.Board;
 import com.loatodo.loatodobackend.util.Timestamp;
 import com.loatodo.loatodobackend.util.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -42,6 +46,9 @@ public class User extends Timestamp {
 
     @Column
     private String picture;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Board> boardList = new ArrayList<>();
 
     public void updateName(String newName) {
         if (newName != null) {
