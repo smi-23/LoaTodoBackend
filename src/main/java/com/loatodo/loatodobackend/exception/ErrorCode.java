@@ -11,6 +11,10 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.BAD_REQUEST, "유저가 존재하지 않습니다."),
     PASSWORD_NOT_MATCH(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다."),
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "잘못된 비밀번호 입니다."),
+    FORBIDDEN(HttpStatus.FORBIDDEN, "해당 작업을 수행 할 권한이 없습니다."),
+    BOARD_NOT_FOUND(HttpStatus.BAD_REQUEST, "해당 게시글이 존재하지 않습니다."),
+
+
 
 
     //인증

@@ -31,4 +31,14 @@ public class Board extends Timestamp {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
+
+    public void update(BoardReqDto reqDto) {
+        if (reqDto.getTitle() != null) {
+            this.title = reqDto.getTitle();
+        }
+        if (reqDto.getContent() != null) {
+            this.content = reqDto.getContent();
+        }
+    }
+
 }

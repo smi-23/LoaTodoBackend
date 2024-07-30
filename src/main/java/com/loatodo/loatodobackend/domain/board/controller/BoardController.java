@@ -14,18 +14,28 @@ import org.springframework.web.bind.annotation.*;
 public class BoardController {
     private final BoardService boardService;
 
-//    @GetMapping("/")
-//    public ResponseEntity<Message> getAllBoardList() {
-//        return boardService.getAllBoardList();
-//    }
-//
-//    @GetMapping("/")
-//    public ResponseEntity<Message> getMyBoardList(HttpServletRequest request) {
-//        return boardService.getMyBoardList(request);
-//    }
+    @GetMapping("/all")
+    public ResponseEntity<Message> getAllBoardList() {
+        return boardService.getAllBoardList();
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<Message> getMyBoardList(HttpServletRequest request) {
+        return boardService.getMyBoardList(request);
+    }
 
     @PostMapping("/create")
     public ResponseEntity<Message> createBoard(@RequestBody BoardReqDto reqDto, HttpServletRequest request) {
         return boardService.createBoard(reqDto, request);
+    }
+
+    @PatchMapping("/update/{id}")
+    public ResponseEntity<Message> updateBoard(@PathVariable Long id, @RequestBody BoardReqDto reqDto, HttpServletRequest request) {
+        return boardService.updateBoard(id, reqDto, request);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Message> deleteBoard(@PathVariable Long id,  HttpServletRequest request) {
+        return boardService.deleteBoard(id, request);
     }
 }
