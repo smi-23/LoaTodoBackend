@@ -14,6 +14,11 @@ import org.springframework.web.bind.annotation.*;
 public class BoardController {
     private final BoardService boardService;
 
+    @PostMapping("/create")
+    public ResponseEntity<Message> createBoard(@RequestBody BoardReqDto reqDto, HttpServletRequest request) {
+        return boardService.createBoard(reqDto, request);
+    }
+
     @GetMapping("/all")
     public ResponseEntity<Message> getAllBoardList() {
         return boardService.getAllBoardList();
@@ -24,10 +29,11 @@ public class BoardController {
         return boardService.getMyBoardList(request);
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<Message> createBoard(@RequestBody BoardReqDto reqDto, HttpServletRequest request) {
-        return boardService.createBoard(reqDto, request);
+    @GetMapping("/{boardId}")
+    public ResponseEntity<Message> readBoard(@PathVariable Long boardId) {
+        return boardService.readBoard(boardId);
     }
+
 
     @PatchMapping("/update/{id}")
     public ResponseEntity<Message> updateBoard(@PathVariable Long id, @RequestBody BoardReqDto reqDto, HttpServletRequest request) {

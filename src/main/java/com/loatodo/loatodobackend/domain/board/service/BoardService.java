@@ -34,6 +34,7 @@ public class BoardService {
                 .author(user.getUsername())
                 .title(reqDto.getTitle())
                 .content(reqDto.getContent())
+                .view(0L)
                 .user(user)
                 .build();
 
@@ -66,6 +67,18 @@ public class BoardService {
                 .collect(Collectors.toList());
 
         return new ResponseEntity<>(new Message(user.getUsername() + "님의 전체 게시글을 조회합니다.", boardResDtoList), HttpStatus.OK);
+    }
+
+    public ResponseEntity<Message> readBoard(Long boardId){
+        Board board = boardServiceUtil.findBoard(boardId);
+
+        board.incrementViews();
+
+        boardRepository.save(board);
+
+        BoardResDto resDto = BoardResDto.of(board);
+
+        return new ResponseEntity<>(new Message(board.getId() + "번 게시글을 조회합니다.", resDto), HttpStatus.OK);
     }
 
     public ResponseEntity<Message> updateBoard(Long id, BoardReqDto reqDto, HttpServletRequest request) {

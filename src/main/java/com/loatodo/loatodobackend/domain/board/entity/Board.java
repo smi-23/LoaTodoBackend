@@ -28,9 +28,16 @@ public class Board extends Timestamp {
     @Column(nullable = false)
     private String author;
 
+    @Column()
+    private Long view;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
+
+    public void incrementViews() {
+        this.view++;
+    }
 
     public void update(BoardReqDto reqDto) {
         if (reqDto.getTitle() != null) {

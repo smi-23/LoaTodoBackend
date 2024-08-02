@@ -13,6 +13,7 @@ public class BoardResDto {
     private String author;
     private String title;
     private String content;
+    private Long view;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
 
@@ -22,6 +23,7 @@ public class BoardResDto {
                 .author(board.getAuthor())
                 .title(board.getTitle())
                 .content(board.getContent())
+                .view(board.getView())
                 .createdAt(board.getCreatedAt())
                 .modifiedAt(board.getModifiedAt())
                 .build();
