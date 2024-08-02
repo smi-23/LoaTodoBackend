@@ -137,6 +137,6 @@ public class GoogleLoginService {
 
         log.info("구글 로그인 되었습니다.");
 
-        return new ResponseEntity<>(new Message("구글 로그인 성공", null), HttpStatus.OK);
+        return new ResponseEntity<>(new Message("구글 로그인 성공", responseDto), HttpStatus.OK);
     }
 }

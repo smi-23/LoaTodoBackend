@@ -1,10 +1,14 @@
 package com.loatodo.loatodobackend.domain.board.entity;
 
 import com.loatodo.loatodobackend.domain.board.dto.BoardReqDto;
+import com.loatodo.loatodobackend.domain.comment.entity.Comment;
 import com.loatodo.loatodobackend.domain.user.entity.User;
 import com.loatodo.loatodobackend.util.Timestamp;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -34,6 +38,9 @@ public class Board extends Timestamp {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
+
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
+    private List<Comment> commentList = new ArrayList<>();
 
     public void incrementViews() {
         this.view++;
